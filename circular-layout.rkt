@@ -1,7 +1,8 @@
 
 #lang at-exp  racket
 
-(require  scribble/srcdoc)
+(require  scribble/srcdoc
+          (for-doc racket/base scribble/manual))
 (require racket/gui/base)
 
 (provide 
@@ -10,26 +11,43 @@
 (struct*-doc clnode ([name string?] [size number?] [label string?] [color string?])
              @{
 
-              description of a node for circular layout.
-              name is the identifier of the node
-              size determines the area of the node's circle -- in dc pixels, if scale = 1 -- which is conserved in the area of the node's circle
-              label is the string drawn at the center of the node
-              color is the string representation of the color used to fill the node (optional: defaults to "white")
-              
-})
+              Description of a node for circular-layout.
 
+              @itemlist[
+           @item{@racket[name] is the identifier of the node.}
+              
+           @item{@racket[size] determines the area of the node's circle -- in dc pixels, if scale = 1 -- which is conserved in the area of the node's circle.}
+              
+           @item{@racket[label] is the string drawn at the center of the node.}
+              
+           @item{@racket[color] is the string representation of the color used to fill the node.}
+           ]
+
+It is recommended to use the convenience constructor @racket[make-cl-node], which sets some reasonable defaults with minimal specification.})
+
+      
 
 
 (struct*-doc cledge ([source string?] [target string?] [width number?] [label string?] [directed boolean?])
              @{
 
-              description of an edge between two nodes for circular layout.
-              source is the identifier of the source node (matches name of one of the clnodes in accompanying list of nodes)
-              target is the identifier of the target node (matches name of one of the clnodes in accompanying list of nodes)
-              (if source and target are the same name of a single node, then the edge is a self-edge from that node back to that same node.
-              width determines the pen-width of the edge line in pixels (regardless of scale)
-              label is the string drawn at the control point of the edge curve
-              directed is a boolean flag that determines if an arrow is drawn pointing at target node (optional: defaults to #t)
+              Description of an edge between two nodes for circular layout.
+
+               @itemlist[
+              
+              @item{@racket[source] is the identifier of the source node, i.e, matches name of one of the clnodes in accompanying list of nodes.}
+              
+              @item{@racket[target] is the identifier of the target node, i.e., matches name of one of the clnodes in accompanying list of nodes. If source and target are the same name of a single node, then the edge is a self-edge from that node back to that same node.}
+              
+             @item{@racket[width] determines the pen-width of the edge line in pixels (regardless of scale).}
+             
+             @item{@racket[label] is the string drawn at the control point of the edge curve.}
+           
+             
+              @item{@racket[directed] is a boolean flag that determines if an arrow is drawn pointing at target node (optional: defaults to #t).}
+               ]
+
+             It is recommended to use the convenience constructor @racket[make-cl-edge], which sets some reasonable defaults with minimal specification.
               
 })
 
@@ -37,14 +55,14 @@
 (proc-doc/names make-cl-node (->* (#:name string? ) (#:size number? #:label (or/c #f string?) #:color string?) clnode?)
 (( name  ) ([size 1] [label #f]  [color "white"]))
 @{
-   An alternative constructor for a clnode with default size 1, using name as default label and white as default color.
+   An  convenience constructor for a @racket[clnode] with default size 1, using name as default label and white as default color.
 })
 
 (proc-doc/names make-cl-edge (->* (#:source string? #:target string?) (#:label string? #:width number? #:directed boolean?) cledge?)
                 (( source  target)( [label ""]  [width 1]  [directed #t]))
                 @{
 
-    An alternative constructor for a cledge, with default width of 1, no label, and default as 'directed' (i.e., an arrow is drawn at the target end).
+    An convenience constructor for a  @racket[cledge], with default width of 1, no label, and 'directed' by default (i.e., an arrow is drawn at the target end).
 })
 
 
@@ -58,11 +76,13 @@
                ( (dc nodes edges center scale) ())
                  @{
 
-                   nodes are drawn with first node at 12 o'clock, with subsequent nodes arranged clockwise,
-in same order as in the nodes list
- nodes are spaced at vertices of a polygon with side length (* kScaleSideLength (max node radius))
- ( default is a sidelength 4 x the radius of the largest node )
- edges can be in any order as they reference members of the nodes list
+                   Nodes are drawn with first node at 12 o'clock, with subsequent nodes arranged clockwise,
+in the same order as they appear in the nodes list.
+
+ Nodes are spaced at vertices of a polygon with side length @racket[(* kScaleSideLength (max node radius))].
+ (The default sidelength  default is  4 x the radius of the largest node.)
+ 
+ Edges can be listed in any order, as they reference members of the nodes list.
 
 
 })
@@ -80,6 +100,7 @@ in same order as in the nodes list
 (define kSelfRadiusScale 1.7) ; relative size of self-node arc compared to node radius
 (define kArrowLength 0.75) ; length of arrow sides relative to scale
 (define kUseEdgeWeight #t) ; draw edges with width = weight, otherwise width 1
+(define kEdgeEndPointOffset 30) ; amount end points of directed edges are offset so they don't overlap
 
 #| ------------------------------------------------------------------------------ |#
 
@@ -275,7 +296,7 @@ in same order as in the nodes list
   ; move perpendicular to edge angle by perp-offset pixels
   ; TODO: make perp-offset a multiple of line-width?
   (define perp-angle (+ edge-angle (/ pi 2)))
-  (define perp-offset (/ 3 scale))
+  (define perp-offset (/ kEdgeEndPointOffset scale))
   (define dx (if (and (not directed) kDrawStraightUndirectedEdges) 0 (* perp-offset (cos perp-angle))))
   (define dy (if (and (not directed) kDrawStraightUndirectedEdges) 0 (* perp-offset (sin perp-angle))))
   
@@ -473,7 +494,10 @@ in same order as in the nodes list
 ; find angle formed by the line between 2 points; angle will be relative to y=0 line
 (define (2points->angle pt1 pt2)
 
-  (cond [(=  (car pt1) (car pt2)) 0.0]
+  (cond [(=  (car pt1) (car pt2))
+         (if (< (cdr pt1) (cdr pt2))
+             (/ pi -2)
+             (/ pi 2))]
         [else (atan (- (cdr pt1) (cdr pt2)) (- (car pt1) (car pt2)))]))
 
 #| ------------------------------------------------------------------------------ |#
@@ -505,7 +529,7 @@ in same order as in the nodes list
     (cons (+ (car mid) dx) (+ (cdr mid) dy))))
 
 #| ------------------------------------------------------------------------------ |#
-; babylonian tablet BM 85194
+; Babylonian tablet BM 85194
 ; https://math.stackexchange.com/questions/3936542/finding-the-perpendicular-distance-from-a-chord-to-the-circumference
 ; Let C be the center of the circle, M be the midpoint of the chord,
 ; and A be one endpoint of the chord.

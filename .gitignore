@@ -1,0 +1,5 @@
+doc/
+compiled/
+*.js
+*.css
+*.html

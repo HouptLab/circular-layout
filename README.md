@@ -6,7 +6,7 @@ Nodes are defined using *make-cl-node* (which sets a name, size, a label and col
 
 ## Example output
 
-<img src="./scribblings/img/graph-5-nodes.png" alt="5-node graph" width="400"/>
+<img src="./scribblings/img/3-graphs.png" alt="2-node, 3-node, and 5-node graphs" width="800"/>
 
 ## Example usage
 
@@ -52,7 +52,11 @@ Nodes are defined using *make-cl-node* (which sets a name, size, a label and col
 (make-object image-snip% target)
 
 ;; call the circular-layout function to draw the graph
-(draw-circular-layout #:dc dc #:nodes test-clnodes #:edges test-cledges #:center '(200 . 200) #:scale 10)
+(draw-circular-layout #:dc dc 
+                      #:nodes nodes 
+                      #:edges edges 
+                      #:center '(200 . 200) 
+                      #:scale 10)
 ```
 
 
