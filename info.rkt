@@ -5,6 +5,8 @@
 (define pkg-desc "A lightweight module for drawing nodes and edges in a circular layout.")
 (define license 'MIT)
 (define pkg-authors '(houpt@bio.fsu.edu))
+(define scribblings
+  '(("scribblings/circular-layout.scrbl" ())))
 (define deps '("base"
                "gui-lib"
                "scribble-lib"))
