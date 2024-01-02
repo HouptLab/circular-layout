@@ -1,12 +1,14 @@
 #lang scribble/manual
 @(require scribble/extract)
 
+@(require (for-label circular-layout))
+@(require (for-label racket/gui/base))
 
 @title{Circular-Layout Reference}
 @author[(author+email "Thomas A. Houpt" "houpt@bio.fsu.edu")]
 
 
-Circular Layout - light-weight drawing of nodes and edges in a circular layout
+Light-weight drawing of nodes and edges in a circular layout
 
 @table-of-contents[]
 
@@ -16,7 +18,7 @@ Circular Layout - light-weight drawing of nodes and edges in a circular layout
 
 A lightweight Racket module which draws a graph of nodes and edges in a circular layout, as an alternative to more powerful graph-rendering e.g. graphviz.
 
-Nodes are defined using *make-cl-node* (which sets a name, size, a label and color), and edges are defined using *make-cl-edge* (which defines the source and target nodes, the weight of the edge, a label, and whether the edge is directed, i.e. has an arrow). A list of these nodes and edges are passed to *draw-circular-layout* along with a destination drawing context (dc<%>); scale factor and center of the graph is also specified.
+Nodes are defined using @racket[make-cl-node] (which sets a name, size, a label and color), and edges are defined using @racket[make-cl-edge] (which defines the source and target nodes, the weight of the edge, a label, and whether the edge is directed, i.e. has an arrow). A list of these nodes and edges are passed to @racket[draw-circular-layout] along with a destination drawing context ( @racket[dc<%>]); scale factor and center of the graph within the drawing context also specified.
 
 @section[#:tag "ouput"]{Example output}
 

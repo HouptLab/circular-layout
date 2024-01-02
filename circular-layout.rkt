@@ -1,5 +1,5 @@
 
-#lang at-exp  racket
+#lang racket
 
 (require  scribble/srcdoc
           (for-doc racket/base scribble/manual))
@@ -7,88 +7,58 @@
 
 (provide 
 
-
-(struct*-doc clnode ([name string?] [size number?] [label string?] [color string?])
-             @{
-
-              Description of a node for circular-layout.
-
-              @itemlist[
-           @item{@racket[name] is the identifier of the node.}
-              
-           @item{@racket[size] determines the area of the node's circle -- in dc pixels, if scale = 1 -- which is conserved in the area of the node's circle.}
-              
-           @item{@racket[label] is the string drawn at the center of the node.}
-              
-           @item{@racket[color] is the string representation of the color used to fill the node.}
-           ]
-
-It is recommended to use the convenience constructor @racket[make-cl-node], which sets some reasonable defaults with minimal specification.})
+ (struct*-doc clnode ([name string?] [size number?] [label string?] [color string?])
+              ("Description of a node for circular-layout."
+               (itemlist
+                (item (racket name) " is the identifier of the node.")
+                (item (racket size) " determines the area of the node's circle -- in dc pixels, if scale = 1 -- which is conserved in the area of the node's circle.")
+                (item (racket label) " is the string drawn at the center of the node.")
+                (item (racket color) " is the string representation of the color used to fill the node."))
+               "It is recommended to use the convenience constructor "
+               (racket make-cl-node)
+               ", which sets some reasonable defaults with minimal specification."))
 
       
+ (struct*-doc cledge ([source string?] [target string?] [width number?] [label string?] [directed boolean?])
+              ("Description of an edge between two nodes for circular layout. "
+               (itemlist
+                (item (racket source) "  is the identifier of the source node, i.e, matches name of one of the clnodes in accompanying list of nodes.")
+                (item (racket target) "  is the identifier of the target node, i.e., matches name of one of the clnodes in accompanying list of nodes. If source and target are the same name of a single node, then the edge is a self-edge from that node back to that same node.")
+                (item (racket width) "  determines the pen-width of the edge line in pixels (regardless of scale).")
+                (item (racket label) "  is the string drawn at the control point of the edge curve.")
+                (item (racket directed) "  is a boolean flag that determines if an arrow is drawn pointing at target node (optional: defaults to #t)."))
+               "It is recommended to use the convenience constructor "
+               (racket make-cl-edge )
+               ", which sets some reasonable defaults with minimal specification."))
+
+ (proc-doc/names make-cl-node (->* (#:name string? ) (#:size number? #:label (or/c #f string?) #:color string?) clnode?)
+                 (( name  ) ([size 1] [label #f]  [color "white"]))
+                 ("A convenience constructor for a "
+                  (racket clnode)
+                  " with default size 1, using name as default label and white as default color." ))
+
+ (proc-doc/names make-cl-edge (->* (#:source string? #:target string?) (#:label string? #:width number? #:directed boolean?) cledge?)
+                 (( source  target)( [label ""]  [width 1]  [directed #t]))
+                 ("A convenience constructor for a  "
+                  (racket cledge)
+                  ", with default width of 1, no label, and 'directed' by default (i.e., an arrow is drawn at the target end)." ))
 
 
-(struct*-doc cledge ([source string?] [target string?] [width number?] [label string?] [directed boolean?])
-             @{
-
-              Description of an edge between two nodes for circular layout.
-
-               @itemlist[
-              
-              @item{@racket[source] is the identifier of the source node, i.e, matches name of one of the clnodes in accompanying list of nodes.}
-              
-              @item{@racket[target] is the identifier of the target node, i.e., matches name of one of the clnodes in accompanying list of nodes. If source and target are the same name of a single node, then the edge is a self-edge from that node back to that same node.}
-              
-             @item{@racket[width] determines the pen-width of the edge line in pixels (regardless of scale).}
-             
-             @item{@racket[label] is the string drawn at the control point of the edge curve.}
-           
-             
-              @item{@racket[directed] is a boolean flag that determines if an arrow is drawn pointing at target node (optional: defaults to #t).}
-               ]
-
-             It is recommended to use the convenience constructor @racket[make-cl-edge], which sets some reasonable defaults with minimal specification.
-              
-})
-
-
-(proc-doc/names make-cl-node (->* (#:name string? ) (#:size number? #:label (or/c #f string?) #:color string?) clnode?)
-(( name  ) ([size 1] [label #f]  [color "white"]))
-@{
-   An  convenience constructor for a @racket[clnode] with default size 1, using name as default label and white as default color.
-})
-
-(proc-doc/names make-cl-edge (->* (#:source string? #:target string?) (#:label string? #:width number? #:directed boolean?) cledge?)
-                (( source  target)( [label ""]  [width 1]  [directed #t]))
-                @{
-
-    An convenience constructor for a  @racket[cledge], with default width of 1, no label, and 'directed' by default (i.e., an arrow is drawn at the target end).
-})
-
-
-(proc-doc/names draw-circular-layout (->* (#:dc (is-a?/c dc<%>)
-                                         #:nodes (listof clnode?)
-                                         #:edges (listof cledge?)
-                                         #:center (cons/c number? number?)
-                                         #:scale number?)
-                                          ()
-                                         void?)
-               ( (dc nodes edges center scale) ())
-                 @{
-
-                   Nodes are drawn with first node at 12 o'clock, with subsequent nodes arranged clockwise,
-in the same order as they appear in the nodes list.
-
- Nodes are spaced at vertices of a polygon with side length @racket[(* kScaleSideLength (max node radius))].
- (The default sidelength  default is  4 x the radius of the largest node.)
- 
- Edges can be listed in any order, as they reference members of the nodes list.
-
-
-})
-
-
-) ; provide
+ (proc-doc/names draw-circular-layout (->* (#:dc (is-a?/c dc<%>)
+                                            #:nodes (listof clnode?)
+                                            #:edges (listof cledge?)
+                                            #:center (cons/c number? number?)
+                                            #:scale number?)
+                                           ()
+                                           void?)
+                 ( (dc nodes edges center scale) ())
+                 ((para "Nodes are drawn with first node at 12 o'clock, with subsequent nodes arranged clockwise,
+in the same order as they appear in the nodes list." )
+                  (para "Nodes are spaced at vertices of a polygon with side length "
+                  (racket (* kScaleSideLength (max node radius)))
+                  ". (The default sidelength is  4 x the radius of the largest node.)" )
+                  (para "Edges can be listed in any order, as they reference members of the nodes list." )))
+ ) ; provide
 
 #| ------------------------------------------------------------------------------ |#
 #| Parameters ------------------------------------------------------------------- |#
@@ -114,7 +84,7 @@ in the same order as they appear in the nodes list.
 
 
 (define (make-cl-edge #:source source #:target target #:label [label ""] #:width [width 1] #:directed [directed #t])
-   (cledge source target width label directed))
+  (cledge source target width label directed))
 
 
 #| ------------------------------------------------------------------------------ |#
@@ -127,17 +97,17 @@ in the same order as they appear in the nodes list.
 
 (define (draw-circular-layout #:dc dc #:nodes nodes #:edges edges #:center center #:scale scale)
   
- ; TODO: have draw-nodes return vertices, and reconcile scale and normalize values
+  ; TODO: have draw-nodes return vertices, and reconcile scale and normalize values
 
- ; (define cl-scale (make-parameter scale))
- ; (parameterize ([cl-scale scale])
+  ; (define cl-scale (make-parameter scale))
+  ; (parameterize ([cl-scale scale])
   (define nodes-hash (draw-nodes  #:dc dc #:nodes nodes #:center center #:scale scale ))
   (draw-edges #:dc dc #:nodes nodes #:nodes-hash nodes-hash #:edges edges  #:scale scale)
- ;   )
+  ;   )
   )
 
- ; TODO: routine to calculate width and height of resulting layout, so we can set bitmap appropriately
- ; TODO: move constants in parameters? so user can set the parameters before calling?
+; TODO: routine to calculate width and height of resulting layout, so we can set bitmap appropriately
+; TODO: move constants in parameters? so user can set the parameters before calling?
 ; TODO: add parameter for drawing edges as straight lines (if undirected) or as splines (if directed)
 
 #| ------------------------------------------------------------------------------ |#
@@ -156,7 +126,7 @@ in the same order as they appear in the nodes list.
   (define side-length (* kScaleSideLength biggest-node-radius))
   (define p-radius (polygon-radius #:for-sides n #:side-length side-length))
   
-;  (writeln (format "unscaled radius ~a" polygon-radius))
+  ;  (writeln (format "unscaled radius ~a" polygon-radius))
 
   ;; allow margins equal to the radius of the biggest node
   ;; so polygon gets inscribed in a square of side polygon-radius + 2 * biggest-node-radius
@@ -235,10 +205,10 @@ in the same order as they appear in the nodes list.
   (for ([e edges])
 
     ; set width of edge
-   (cond [kUseEdgeWeight
-         (send dc set-pen (new pen% [color "darkgray" ] [width (cledge-width e)]))]
-         [else
-          (send dc set-pen (new pen% [color "darkgray" ] [width 1]))])
+    (cond [kUseEdgeWeight
+           (send dc set-pen (new pen% [color "darkgray" ] [width (cledge-width e)]))]
+          [else
+           (send dc set-pen (new pen% [color "darkgray" ] [width 1]))])
   
 
     (define source-name (cledge-source e))
@@ -317,21 +287,21 @@ in the same order as they appear in the nodes list.
   ; TODO: get magnitude of control-point-offset in a principled way (e.g. as proportion of layout radius?
   ; find control point in unscaled layout, then scale and center
 
-    (define control-point-offset scale)
-    (define control-pt  (mid-offset-point source-pt target-pt control-point-offset))
+  (define control-point-offset scale)
+  (define control-pt  (mid-offset-point source-pt target-pt control-point-offset))
 
 
-   ( cond 
-          [(and (not directed) kDrawStraightUndirectedEdges)
-           (send dc draw-line (car source-pt) (cdr source-pt) (car target-pt) (cdr target-pt))]
-          [else 
+  ( cond 
+     [(and (not directed) kDrawStraightUndirectedEdges)
+      (send dc draw-line (car source-pt) (cdr source-pt) (car target-pt) (cdr target-pt))]
+     [else 
       (send dc draw-spline (car source-pt) (cdr source-pt) (car control-pt) (cdr control-pt) (car target-pt) (cdr target-pt))])
 
   ( cond [directed 
 
-  ; source -> target
-  (define tangent-angle  (2points->angle target-pt control-pt))
-  (draw-arrow #:dc dc #:pt target-pt #:angle tangent-angle  #:scale scale ) ])
+          ; source -> target
+          (define tangent-angle  (2points->angle target-pt control-pt))
+          (draw-arrow #:dc dc #:pt target-pt #:angle tangent-angle  #:scale scale ) ])
 
   ; TODO: offset label from control pt in direction perpendicular to edge
   (define-values (tw th ta td) (send dc get-text-extent label	)) 
@@ -392,9 +362,9 @@ in the same order as they appear in the nodes list.
         )
 
   (cond [directed 
-  ;; TODO: find tangent angle of arc at side-pt, so we can set arrow angle precisely?
-  (draw-arrow #:dc dc #:pt side-pt #:angle (+ (* 0.96875 pi ) node-angle) #:scale scale ) ; (/ 7.75 8) = 0.96875 works ok
-  ])
+         ;; TODO: find tangent angle of arc at side-pt, so we can set arrow angle precisely?
+         (draw-arrow #:dc dc #:pt side-pt #:angle (+ (* 0.96875 pi ) node-angle) #:scale scale ) ; (/ 7.75 8) = 0.96875 works ok
+         ])
 
   (define-values (tw th ta td) (send dc get-text-extent label	)) 
 
