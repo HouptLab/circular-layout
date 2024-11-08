@@ -10,4 +10,5 @@
                "scribble-lib"))
 (define build-deps '("at-exp-lib"
                      "draw-doc"
-                     "racket-doc"))
+                     "racket-doc"
+                     "gui-doc"))
